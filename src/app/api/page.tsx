@@ -39,7 +39,7 @@ export default function ApiTestPage() {
     try {
       setServerStatus('확인 중...')
       setError(null)
-      const response = await axios.get(`http://43.203.249.114:5000/`)
+      const response = await axios.get(`http://ec2-43-203-218-212.ap-northeast-2.compute.amazonaws.com:5000`)
       console.log(response.data)
       setServerStatus('온라인')
     } catch (err) {
@@ -62,7 +62,7 @@ export default function ApiTestPage() {
       const formData = new FormData()
       formData.append('image', selectedFile)
 
-      const response = await axios.post(`http://43.203.249.114:5000/predict`, formData, {
+      const response = await axios.post(`http://ec2-43-203-218-212.ap-northeast-2.compute.amazonaws.com:5000/predict`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'blob',
       })
@@ -91,7 +91,7 @@ export default function ApiTestPage() {
       const formData = new FormData()
       formData.append('image', selectedFile)
 
-      const response = await axios.post(`http://43.203.249.114:5000/predict-json`, formData, {
+      const response = await axios.post(`http://ec2-43-203-218-212.ap-northeast-2.compute.amazonaws.com:5000/predict-json`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
