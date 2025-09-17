@@ -23,18 +23,11 @@ export async function POST(req: NextRequest) {
   })
 
   try {
-    const response = await axios.post(
-      'http://ec2-43-203-218-212.ap-northeast-2.compute.amazonaws.com:5000/predict-json',
-      backendForm,
-      {
-        headers: backendForm.getHeaders(),
-      }
-    )
+    const response = await axios.post('https://port-0-hanamory-be-mc4jrdp5a5037961.sel5.cloudtype.app/predict-json', backendForm, {
+      headers: backendForm.getHeaders(),
+    })
     return NextResponse.json(response.data)
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err?.response?.data?.error || err.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: err?.response?.data?.error || err.message }, { status: 500 })
   }
 }

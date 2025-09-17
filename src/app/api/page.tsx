@@ -39,7 +39,7 @@ export default function ApiTestPage() {
     try {
       setServerStatus('확인 중...')
       setError(null)
-      const response = await axios.get(`http://ec2-43-203-218-212.ap-northeast-2.compute.amazonaws.com:5000`)
+      const response = await axios.get(`https://port-0-hanamory-be-mc4jrdp5a5037961.sel5.cloudtype.app`)
       console.log(response.data)
       setServerStatus('온라인')
     } catch (err) {
@@ -62,7 +62,7 @@ export default function ApiTestPage() {
       const formData = new FormData()
       formData.append('image', selectedFile)
 
-      const response = await axios.post(`http://ec2-43-203-218-212.ap-northeast-2.compute.amazonaws.com:5000/predict`, formData, {
+      const response = await axios.post(`https://port-0-hanamory-be-mc4jrdp5a5037961.sel5.cloudtype.app/predict`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         responseType: 'blob',
       })
@@ -91,7 +91,7 @@ export default function ApiTestPage() {
       const formData = new FormData()
       formData.append('image', selectedFile)
 
-      const response = await axios.post(`http://ec2-43-203-218-212.ap-northeast-2.compute.amazonaws.com:5000/predict-json`, formData, {
+      const response = await axios.post(`https://port-0-hanamory-be-mc4jrdp5a5037961.sel5.cloudtype.app/predict-json`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
 
@@ -107,7 +107,7 @@ export default function ApiTestPage() {
 
   return (
     <div>
-      <h1>API 테스트</h1>
+      <h1>API Test</h1>
 
       {/* 서버 상태 */}
       <div>
@@ -142,15 +142,13 @@ export default function ApiTestPage() {
       <div>
         <button
           onClick={getPredictionImage}
-          disabled={!selectedFile || loading}
-        >
+          disabled={!selectedFile || loading}>
           {loading ? '처리중...' : '이미지 예측'}
         </button>
 
         <button
           onClick={getPredictionJson}
-          disabled={!selectedFile || loading}
-        >
+          disabled={!selectedFile || loading}>
           {loading ? '처리중...' : 'JSON 예측'}
         </button>
       </div>
