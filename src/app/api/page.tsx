@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
-import useAppStore from '../store/Appstate'
+import { useFlowerUploadStore } from '@/store/useFlowerUploadStore'
 
 export default function ApiTestPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -14,14 +14,14 @@ export default function ApiTestPage() {
   const [error, setError] = useState<string | null>(null)
   const [serverStatus, setServerStatus] = useState<string>('확인 필요')
 
-  const { setSelectedImage, setPredictionResults } = useAppStore()
+  const { setFile, setFlowerNames } = useFlowerUploadStore()
 
   // 파일 선택 처리
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0]
       setSelectedFile(file)
-      setSelectedImage(file)
+      setFile(file) // store에 파일 저장
 
       // 파일 미리보기 URL 생성
       const fileUrl = URL.createObjectURL(file)
@@ -96,7 +96,12 @@ export default function ApiTestPage() {
       })
 
       setJsonResult(response.data)
-      setPredictionResults(response.data)
+      // 예측 결과를 store에 저장할 수 있지만 현재는 JSON만 표시
+      if (response.data.predictions && Array.isArray(response.data.predictions)) {
+        // predictions가 있으면 꽃 이름들을 추출하여 store에 저장
+        const flowerNames = response.data.predictions.map((pred: any) => pred.class || pred.name).filter(Boolean)
+        setFlowerNames(flowerNames)
+      }
     } catch (err) {
       setError('JSON 예측 실패')
       console.error(err)
