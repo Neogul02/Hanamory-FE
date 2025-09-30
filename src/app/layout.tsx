@@ -15,8 +15,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           href='https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'
         />
       </head>
-      <body className='font-pretendard min-h-screen flex justify-center'>
-        <div className='w-full box-border md:max-w-2xl 2xl:max-w-2xl'>{children}</div>
+      <body className='font-pretendard min-h-screen flex justify-center bg-white no-scrollbar'>
+        <div className='w-full box-border md:max-w-xl 2xl:max-w-xl'>{children}</div>
       </body>
     </html>
   )

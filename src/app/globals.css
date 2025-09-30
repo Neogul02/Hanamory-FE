@@ -1,5 +1,11 @@
 @import 'tailwindcss';
 
+/* 메인 컬러 변수 */
+:root {
+  --color-primary: #fe9c8b; /* 기존보다 진한 메인 컬러 */
+  --color-primary-hover: #e07a5f; /* 호버 시 더 진한 색 */
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -9,6 +15,29 @@
   display: none;
 }
 
+/* 메인 컬러 클래스들 */
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.bg-primary-hover:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+* {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    sans-serif;
+}
+
 body {
-  background-color: #f9fafb;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    sans-serif;
 }
