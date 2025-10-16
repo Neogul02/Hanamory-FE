@@ -9,10 +9,14 @@ export default function ApiTestPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [resultImage, setResultImage] = useState<string | null>(null)
-  const [jsonResult, setJsonResult] = useState<string>('')
+  const [jsonResult, setJsonResult] = useState<any>('')
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
   const [serverStatus, setServerStatus] = useState<string>('확인 필요')
+  // 꽃말 관련 상태
+  const [flowerMeanings, setFlowerMeanings] = useState<{ [name: string]: string }>({})
+  const [selectedFlowerName, setSelectedFlowerName] = useState<string>('')
+  const [meaningsLoading, setMeaningsLoading] = useState<boolean>(false)
 
   const { setFile, setFlowerNames } = useFlowerUploadStore()
 
@@ -101,12 +105,40 @@ export default function ApiTestPage() {
         // predictions가 있으면 꽃 이름들을 추출하여 store에 저장
         const flowerNames = response.data.predictions.map((pred: any) => pred.class || pred.name).filter(Boolean)
         setFlowerNames(flowerNames)
+        // 꽃말 정보 초기화
+        setFlowerMeanings({})
+        setSelectedFlowerName(flowerNames[0] || '')
+        // 꽃말 정보 요청
+        fetchFlowerMeanings(flowerNames)
       }
     } catch (err) {
       setError('JSON 예측 실패')
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Gemini API로 꽃말 정보 요청
+  async function fetchFlowerMeanings(flowerNames: string[]) {
+    setMeaningsLoading(true)
+    try {
+      const results: { [name: string]: string } = {}
+      // 여러 꽃에 대해 병렬 요청
+      await Promise.all(
+        flowerNames.map(async (name) => {
+          try {
+            // 실제 Gemini API 엔드포인트에 맞게 수정 필요
+            const res = await axios.post('/api/gemini', { flower: name })
+            results[name] = res.data.meaning || '꽃말 정보를 찾을 수 없습니다.'
+          } catch {
+            results[name] = '꽃말 정보를 불러오지 못했습니다.'
+          }
+        })
+      )
+      setFlowerMeanings(results)
+    } finally {
+      setMeaningsLoading(false)
     }
   }
 
@@ -117,7 +149,11 @@ export default function ApiTestPage() {
       {/* 서버 상태 */}
       <div>
         <span>서버 상태: {serverStatus}</span>
-        <button onClick={checkServerStatus}>새로고침</button>
+        <button
+          className='border-2'
+          onClick={checkServerStatus}>
+          새로고침
+        </button>
       </div>
 
       {/* 파일 업로드 */}
@@ -146,12 +182,14 @@ export default function ApiTestPage() {
       {/* API 요청 버튼 */}
       <div>
         <button
+          className='border-2'
           onClick={getPredictionImage}
           disabled={!selectedFile || loading}>
           {loading ? '처리중...' : '이미지 예측'}
         </button>
 
         <button
+          className='border-2'
           onClick={getPredictionJson}
           disabled={!selectedFile || loading}>
           {loading ? '처리중...' : 'JSON 예측'}
@@ -175,6 +213,30 @@ export default function ApiTestPage() {
               style={{ objectFit: 'contain' }}
               unoptimized
             />
+            {/* 꽃 선택 버튼 (꽃이 2개 이상일 때) */}
+            {jsonResult && jsonResult.predictions && Array.isArray(jsonResult.predictions) && jsonResult.predictions.length > 1 && (
+              <div style={{ marginTop: 16 }}>
+                <div>꽃 선택:</div>
+                {jsonResult.predictions.map((pred: any, idx: number) => {
+                  const name = pred.class || pred.name || `꽃${idx + 1}`
+                  return (
+                    <button
+                      key={name}
+                      className={`border-2 m-1 px-2 py-1 ${selectedFlowerName === name ? 'bg-blue-200' : ''}`}
+                      onClick={() => setSelectedFlowerName(name)}>
+                      {name}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {/* 꽃말 정보 표시 */}
+            {selectedFlowerName && (
+              <div style={{ marginTop: 16 }}>
+                <h3>꽃말</h3>
+                {meaningsLoading ? <div>꽃말 불러오는 중...</div> : <div>{flowerMeanings[selectedFlowerName] || '꽃말 정보 없음'}</div>}
+              </div>
+            )}
           </div>
         )}
 

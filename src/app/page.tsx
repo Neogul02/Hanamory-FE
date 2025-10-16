@@ -11,7 +11,7 @@ import { makeFlowerPrompt } from '@/utils/flowerPrompt'
 
 export default function Page() {
   const router = useRouter()
-  const { file, isAnalyzing, setIsAnalyzing, setError, setFlowerNames, setKoreanName, setFlowerLang, setFlowerDesc } = useFlowerUploadStore()
+  const { file, isAnalyzing, setIsAnalyzing, setError, setFlowerNames, setKoreanName, setFlowerLang, setFlowerDesc, setPredictions } = useFlowerUploadStore()
 
   const handleAnalyze = async () => {
     if (!file) return
@@ -22,6 +22,7 @@ export default function Page() {
     setKoreanName(null)
     setFlowerLang(null)
     setFlowerDesc(null)
+    setPredictions([])
 
     try {
       // 1. 꽃 이름 예측 - 자체 AI 이미지 인식 모델
@@ -36,6 +37,9 @@ export default function Page() {
 
       const { flowerList, prompt } = makeFlowerPrompt(data.predictions)
       setFlowerNames(flowerList)
+
+      // 예측 결과를 store에 저장 (다중 꽃 선택 기능을 위해)
+      setPredictions(data.predictions || [])
 
       // 2. 꽃말 요청 (API Route-Gemini로 요청)
       const APIRequest = await axios.post('/api/gemini', { prompt })

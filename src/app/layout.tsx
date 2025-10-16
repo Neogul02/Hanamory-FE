@@ -5,8 +5,7 @@ export const metadata: Metadata = {
   title: 'Hanamory',
   description: 'Yolov5 기반 꽃 이미지 판별',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-icon.png',
+    icon: [{ url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' }],
   },
 }
 
@@ -14,6 +13,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang='ko'>
       <head>
+        <link
+          rel='icon'
+          href='/favicon.ico'
+          sizes='32x32'
+        />
         <link
           rel='stylesheet'
           href='https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'
