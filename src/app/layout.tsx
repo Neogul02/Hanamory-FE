@@ -22,6 +22,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           rel='stylesheet'
           href='https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css'
         />
+        <script
+          type='text/javascript'
+          src={`//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_JAVASCRIPT_KEY}&autoload=false&libraries=services`}
+          async
+        />
       </head>
       <body className='font-pretendard min-h-screen flex justify-center bg-white no-scrollbar'>
         <div className='w-full box-border md:max-w-xl 2xl:max-w-xl'>{children}</div>

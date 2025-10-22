@@ -147,7 +147,7 @@ export default function UploadBox({ maxSizeMb = 20 }: UploadBoxProps) {
               color='#9ca3af'
               className='mx-auto mb-4'
             />
-            <p className='text-lg font-medium text-gray-800 mb-2'>파일을 업로드 해주세요</p>
+            <p className='text-lg font-medium text-gray-800 mb-2'>사진을 업로드 해주세요</p>
             <p className='text-sm text-gray-500 mb-4'>드래그하거나 클릭</p>
           </div>
         )}

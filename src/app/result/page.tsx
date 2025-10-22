@@ -17,13 +17,13 @@ export default function ResultPage() {
   // 꽃이 여러 개일 때 현재 선택된 꽃 정보
   // 중복 제거: 같은 꽃이 여러 개 인식된 경우 하나로 통일
   const uniqueFlowers = predictions.reduce((acc: typeof predictions, current) => {
-    const exists = acc.find(flower => flower.class === current.class)
+    const exists = acc.find((flower) => flower.class === current.class)
     if (!exists) {
       acc.push(current)
     }
     return acc
   }, [])
-  
+
   const isMultipleUniqueFlowers = uniqueFlowers.length > 1
   const currentFlowerName = isMultipleUniqueFlowers && selectedFlowerName ? selectedFlowerName : flowerNames[0] || ''
   const currentFlowerInfo = flowerInfos[currentFlowerName]
@@ -73,6 +73,11 @@ export default function ResultPage() {
         const data = await response.json()
 
         console.log('Gemini API 응답:', data)
+
+        // API 에러 체크
+        if (!response.ok) {
+          throw new Error(data.error || `API 오류: ${response.status}`)
+        }
 
         let koreanFlowerName = flowerName
         let lang = '꽃말 정보를 찾을 수 없습니다.'
@@ -299,14 +304,23 @@ export default function ResultPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.7 }}>
-            <Button
-              onClick={handleShare}
-              className='w-full text-lg py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'>
-              인스타그램 공유하기
-            </Button>
+            {/* 인스타그램 공유 & 꽃집 찾기 - 가로 배치 */}
+            <div className='flex gap-3'>
+              <Button
+                onClick={handleShare}
+                className='flex-1 text-lg py-4 !bg-gradient-to-r !from-purple-500 !to-pink-500 hover:!from-purple-600 hover:!to-pink-600 !text-white'>
+                인스타그램 공유하기
+              </Button>
+              <Button
+                onClick={() => router.push('/flowermap')}
+                className='flex-1 text-lg py-4 !bg-gradient-to-r !from-amber-400 !to-yellow-500 hover:!from-amber-500 hover:!to-yellow-600 !text-white'>
+                내 주변 꽃집 찾기
+              </Button>
+            </div>
+
             <Button
               onClick={handleNewAnalysis}
-              className='w-full text-lg py-4 bg-green-500 hover:bg-green-600'>
+              className='w-full text-lg py-4'>
               새로운 꽃 분석하기
             </Button>
           </motion.div>
