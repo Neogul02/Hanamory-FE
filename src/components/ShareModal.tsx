@@ -18,6 +18,28 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isGenerating, setIsGenerating] = useState(false)
 
+  // 커스터마이징 옵션
+  const [backgroundColor, setBackgroundColor] = useState<string>('dark') // 'none', 'dark', 'light'
+  const [textColor, setTextColor] = useState<string>('#ffffff') // RGB 색상 값
+  const [overlayOpacity, setOverlayOpacity] = useState<number>(0.4) // 0.2, 0.4, 0.6
+
+  // 배경색 옵션 (3가지로 단순화)
+  const backgroundOptions = [
+    { id: 'none', label: '없음', color: 'transparent' },
+    { id: 'dark', label: '어둡게', color: 'rgba(0, 0, 0, 0.4)' },
+    { id: 'light', label: '밝게', color: 'rgba(255, 255, 255, 0.3)' },
+  ]
+
+  // 빠른 색상 선택 프리셋
+  const colorPresets = [
+    { label: '흰색', color: '#ffffff' },
+    { label: '검정', color: '#000000' },
+    { label: '분홍', color: '#ec4899' },
+    { label: '초록', color: '#22c55e' },
+    { label: '파랑', color: '#3b82f6' },
+    { label: '노랑', color: '#eab308' },
+  ]
+
   const generateStoryImage = async (): Promise<string> => {
     return new Promise((resolve, reject) => {
       const canvas = canvasRef.current
@@ -39,28 +61,34 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
       console.log('Canvas 초기화 완료:', canvas.width, 'x', canvas.height)
 
       const renderText = () => {
-        // 어두운 오버레이 (텍스트 가독성을 위해)
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        // 배경 오버레이 적용
+        if (backgroundColor === 'dark') {
+          ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`
+          ctx.fillRect(0, 0, canvas.width, canvas.height)
+        } else if (backgroundColor === 'light') {
+          ctx.fillStyle = `rgba(255, 255, 255, ${overlayOpacity})`
+          ctx.fillRect(0, 0, canvas.width, canvas.height)
+        }
+        // 'none'일 경우 배경 오버레이 없음
 
         const centerX = canvas.width / 2
         const centerY = canvas.height / 2
 
-        // 꽃 이름 텍스트 (흰색, 그림자 효과)
+        // 꽃 이름 텍스트
         if (koreanName) {
           ctx.font = 'bold 100px sans-serif'
           ctx.textAlign = 'center'
 
-          // 텍스트 그림자
+          // 텍스트 그림자 (가독성을 위해)
           ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
           ctx.fillText(koreanName, centerX + 3, centerY - 50 + 3)
 
           // 메인 텍스트
-          ctx.fillStyle = '#ffffff'
+          ctx.fillStyle = textColor
           ctx.fillText(koreanName, centerX, centerY - 50)
         }
 
-        // 꽃말 텍스트 (흰색, 그림자 효과)
+        // 꽃말 텍스트
         if (flowerLang) {
           ctx.font = '60px sans-serif'
           ctx.textAlign = 'center'
@@ -83,7 +111,7 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
               ctx.fillText(line, centerX + 2, y + 2)
 
               // 메인 텍스트
-              ctx.fillStyle = '#ffffff'
+              ctx.fillStyle = textColor
               ctx.fillText(line, centerX, y)
 
               line = words[n] + ' '
@@ -100,12 +128,12 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
             ctx.fillText(line, centerX + 2, y + 2)
 
             // 메인 텍스트
-            ctx.fillStyle = '#ffffff'
+            ctx.fillStyle = textColor
             ctx.fillText(line, centerX, y)
           }
         }
 
-        // 하단에 로고/워터마크 (흰색, 그림자 효과)
+        // 하단에 로고/워터마크
         ctx.font = '50px sans-serif'
         ctx.textAlign = 'center'
 
@@ -114,10 +142,11 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
         ctx.fillText('🌸 Hanamory', centerX + 2, canvas.height - 80 + 2)
 
         // 메인 텍스트
-        ctx.fillStyle = '#ffffff'
+        ctx.fillStyle = textColor
         ctx.fillText('🌸 Hanamory', centerX, canvas.height - 80)
 
-        resolve(canvas.toDataURL('image/png'))
+        // 고품질 이미지로 변환 (JPEG 품질 0.95)
+        resolve(canvas.toDataURL('image/jpeg', 0.95))
       }
 
       const drawImageAndText = (img: HTMLImageElement) => {
@@ -241,7 +270,7 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
         // 데이터 URL을 Blob으로 변환
         const response = await fetch(storyImageUrl)
         const blob = await response.blob()
-        const file = new File([blob], 'flower-story.png', { type: 'image/png' })
+        const file = new File([blob], 'hanamory-flower.jpg', { type: 'image/jpeg' })
 
         await navigator.share({
           files: [file],
@@ -251,7 +280,7 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
       } else {
         // 데스크톱에서는 다운로드
         const link = document.createElement('a')
-        link.download = 'flower-story.png'
+        link.download = 'hanamory-flower.jpg'
         link.href = storyImageUrl
         link.click()
       }
@@ -313,31 +342,125 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
                   className='object-cover'
                 />
 
-                {/* 어두운 오버레이 (텍스트 가독성을 위해) */}
-                <div className='absolute inset-0 bg-[rgba(0,0,0,0.3)]' />
+                {/* 배경 오버레이 (커스터마이징 적용) */}
+                {backgroundColor !== 'none' && (
+                  <div
+                    className='absolute inset-0'
+                    style={{
+                      background: backgroundColor === 'dark' ? `rgba(0, 0, 0, ${overlayOpacity})` : `rgba(255, 255, 255, ${overlayOpacity})`,
+                    }}
+                  />
+                )}
 
                 {/* 텍스트 오버레이 */}
-                <div className='absolute inset-0 flex flex-col items-center justify-center p-6 text-white'>
+                <div
+                  className='absolute inset-0 flex flex-col items-center justify-center p-6'
+                  style={{
+                    color: textColor,
+                    fontFamily: 'sans-serif',
+                  }}>
                   {/* 꽃 이름 */}
-                  {koreanName && <h3 className='text-3xl font-bold text-center mb-4 drop-shadow-lg'>{koreanName}</h3>}
+                  {koreanName && (
+                    <h3
+                      className='text-3xl font-bold text-center mb-4'
+                      style={{
+                        textShadow: '0 2px 4px rgba(0, 0, 0, 0.8)',
+                      }}>
+                      {koreanName}
+                    </h3>
+                  )}
 
                   {/* 꽃말 */}
-                  {flowerLang && <p className='text-lg text-center leading-relaxed px-4 drop-shadow-md'>{flowerLang}</p>}
+                  {flowerLang && (
+                    <p
+                      className='text-lg text-center leading-relaxed px-4'
+                      style={{
+                        textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)',
+                      }}>
+                      {flowerLang}
+                    </p>
+                  )}
                 </div>
 
                 {/* 워터마크 */}
-                <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm drop-shadow-md'>Hanamory</div>
+                <div
+                  className='absolute bottom-4 left-1/2 transform -translate-x-1/2 text-sm'
+                  style={{
+                    color: textColor,
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)',
+                  }}>
+                  Hanamory
+                </div>
               </div>
             </motion.div>
 
-            {/* 설명 */}
-            <motion.p
-              className='text-gray-600 text-center mb-6'
+            {/* 커스터마이징 옵션 */}
+            <motion.div
+              className='mb-6 space-y-4'
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}>
-              감성적인 스토리 이미지로 변환하여 인스타그램에 공유해보세요!
-            </motion.p>
+              transition={{ duration: 0.5, delay: 0.3 }}>
+              {/* 배경 스타일 */}
+              <div>
+                <p className='text-sm font-semibold text-gray-700 mb-2'>배경 스타일</p>
+                <div className='flex gap-2'>
+                  {backgroundOptions.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => setBackgroundColor(option.id)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${backgroundColor === option.id ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 투명도 조절 (배경이 있을 때만) */}
+              {backgroundColor !== 'none' && (
+                <div>
+                  <p className='text-sm font-semibold text-gray-700 mb-2'>배경 투명도</p>
+                  <div className='flex gap-2'>
+                    {[0.2, 0.4, 0.6].map((opacity) => (
+                      <button
+                        key={opacity}
+                        onClick={() => setOverlayOpacity(opacity)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${overlayOpacity === opacity ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
+                        {opacity === 0.2 ? '밝게' : opacity === 0.4 ? '보통' : '어둡게'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 텍스트 색상 */}
+              <div>
+                <p className='text-sm font-semibold text-gray-700 mb-2'>텍스트 색상</p>
+                {/* 컬러피커 */}
+                <div className='flex items-center gap-3 mb-2'>
+                  <input
+                    type='color'
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    className='w-16 h-10 rounded-lg border-2 border-gray-300 cursor-pointer'
+                  />
+                  <span className='text-sm text-gray-600 font-mono'>{textColor.toUpperCase()}</span>
+                </div>
+                {/* 빠른 선택 프리셋 */}
+                <div className='flex gap-2 flex-wrap'>
+                  {colorPresets.map((preset) => (
+                    <button
+                      key={preset.color}
+                      onClick={() => setTextColor(preset.color)}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${textColor === preset.color ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      style={{
+                        borderLeft: `4px solid ${preset.color}`,
+                      }}>
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
 
             {/* 버튼들 */}
             <motion.div

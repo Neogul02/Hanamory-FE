@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useFlowerUploadStore } from '../store/useFlowerUploadStore'
 import { validateImageFile } from '../utils/format'
@@ -13,7 +13,17 @@ interface UploadBoxProps {
 export default function UploadBox({ maxSizeMb = 20 }: UploadBoxProps) {
   const { file, error, isAnalyzing, setFile, setImageUrl, setError } = useFlowerUploadStore()
   const [isDragOver, setIsDragOver] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 메모리 누수 방지: 컴포넌트 언마운트 시 생성된 Object URL 정리
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
 
   const handleFileValidation = (selectedFile: File) => {
     const validationError = validateImageFile(selectedFile, maxSizeMb)
@@ -22,9 +32,14 @@ export default function UploadBox({ maxSizeMb = 20 }: UploadBoxProps) {
       return false
     }
     setFile(selectedFile)
+    // 이전 URL 정리
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+    }
     // 이미지 URL 생성 및 저장
     const url = URL.createObjectURL(selectedFile)
     setImageUrl(url)
+    setPreviewUrl(url)
     return true
   }
 
@@ -133,7 +148,7 @@ export default function UploadBox({ maxSizeMb = 20 }: UploadBoxProps) {
           <div className='w-full text-center p-6'>
             <div className='relative w-full h-90 rounded-xl overflow-hidden'>
               <Image
-                src={URL.createObjectURL(file)}
+                src={previewUrl || URL.createObjectURL(file)}
                 alt='선택된 꽃 이미지'
                 fill
                 className='object-cover'

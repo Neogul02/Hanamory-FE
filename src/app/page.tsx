@@ -11,7 +11,7 @@ import { makeFlowerPrompt } from '@/utils/flowerPrompt'
 
 export default function Page() {
   const router = useRouter()
-  const { file, isAnalyzing, setIsAnalyzing, setError, setFlowerNames, setKoreanName, setFlowerLang, setFlowerDesc, setPredictions } = useFlowerUploadStore()
+  const { file, isAnalyzing, setIsAnalyzing, setError, setFlowerNames, setKoreanName, setFlowerLang, setFlowerDesc, setPredictions, setAnnotatedImageUrl } = useFlowerUploadStore()
 
   const handleAnalyze = async () => {
     if (!file) return
@@ -23,56 +23,41 @@ export default function Page() {
     setFlowerLang(null)
     setFlowerDesc(null)
     setPredictions([])
+    setAnnotatedImageUrl(null)
 
     try {
-      // 1. 꽃 이름 예측 - 자체 AI 이미지 인식 모델
       const formData = new FormData()
       formData.append('image', file)
-      const res = await axios.post('/api/predict-json', formData)
-      const data = res.data
+
+      // 1. predict-json과 predict를 병렬로 요청 (타임아웃 30초)
+      const timeout = 30000 // 30초
+      const [jsonRes, imageRes] = await Promise.all([axios.post('/api/predict-json', formData, { timeout }), axios.post('/api/predict', formData, { timeout })])
+
+      const data = jsonRes.data
 
       if (!data.predictions || !Array.isArray(data.predictions)) {
         throw new Error('예측 결과가 올바르지 않습니다.')
       }
 
-      const { flowerList, prompt } = makeFlowerPrompt(data.predictions)
+      const { flowerList } = makeFlowerPrompt(data.predictions)
       setFlowerNames(flowerList)
 
       // 예측 결과를 store에 저장 (다중 꽃 선택 기능을 위해)
       setPredictions(data.predictions || [])
 
-      // 2. 꽃말 요청 (API Route-Gemini로 요청)
-      const APIRequest = await axios.post('/api/gemini', { prompt })
-
-      let koreanFlowerName = null
-      let lang = null
-      let desc = null
-
-      try {
-        let resultStr = APIRequest.data.result
-        resultStr = resultStr.replace(/```json|```/g, '').trim()
-        const json = JSON.parse(resultStr)
-        const flowerObj = json.꽃 || Object.values(json)[0]
-        koreanFlowerName = flowerObj.한국어이름 || flowerObj.이름 || ''
-        lang = flowerObj.꽃말 || ''
-        desc = flowerObj.설명 || ''
-      } catch {
-        console.log('JSON 파싱 실패, 전체 텍스트 사용')
-        lang = APIRequest.data.result
+      // 2. 꽃 인식 표시된 이미지 URL 저장 (결과 페이지에서 표시용)
+      if (imageRes.data.imageUrl) {
+        setAnnotatedImageUrl(imageRes.data.imageUrl)
       }
 
-      setKoreanName(koreanFlowerName)
-      setFlowerLang(lang)
-      setFlowerDesc(desc)
-
-      // 분석 완료 후 결과 페이지로 이동
+      // 3. 즉시 결과 페이지로 이동 (Gemini는 result 페이지에서 처리)
       router.push('/result')
     } catch (error: any) {
       console.error('분석 중 오류 발생:', error)
       setError(error?.response?.data?.error || error.message || '분석 중 오류가 발생했습니다.')
-    } finally {
       setIsAnalyzing(false)
     }
+    // isAnalyzing은 result 페이지로 이동 시 자동으로 false가 됨
   }
 
   return (

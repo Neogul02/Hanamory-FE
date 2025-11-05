@@ -15,7 +15,8 @@ interface FlowerInfo {
 
 interface FlowerUploadState {
   file: File | null
-  imageUrl: string | null
+  imageUrl: string | null // 원본 이미지 URL (공유용)
+  annotatedImageUrl: string | null // 꽃 인식 표시된 이미지 URL (결과 페이지 표시용)
   error: string
   isAnalyzing: boolean
   flowerNames: string[]
@@ -28,6 +29,7 @@ interface FlowerUploadState {
   selectedFlowerName: string | null
   setFile: (file: File | null) => void
   setImageUrl: (url: string | null) => void
+  setAnnotatedImageUrl: (url: string | null) => void
   setError: (error: string) => void
   setIsAnalyzing: (isAnalyzing: boolean) => void
   setFlowerNames: (names: string[]) => void
@@ -43,6 +45,7 @@ interface FlowerUploadState {
 export const useFlowerUploadStore = create<FlowerUploadState>((set) => ({
   file: null,
   imageUrl: null,
+  annotatedImageUrl: null,
   error: '',
   isAnalyzing: false,
   flowerNames: [],
@@ -54,6 +57,7 @@ export const useFlowerUploadStore = create<FlowerUploadState>((set) => ({
   selectedFlowerName: null,
   setFile: (file) => set({ file }),
   setImageUrl: (url) => set({ imageUrl: url }),
+  setAnnotatedImageUrl: (url) => set({ annotatedImageUrl: url }),
   setError: (error) => set({ error }),
   setIsAnalyzing: (isAnalyzing) => set({ isAnalyzing }),
   setFlowerNames: (names) => set({ flowerNames: names }),
@@ -67,6 +71,7 @@ export const useFlowerUploadStore = create<FlowerUploadState>((set) => ({
     set({
       file: null,
       imageUrl: null,
+      annotatedImageUrl: null,
       flowerNames: [],
       koreanName: null,
       flowerLang: null,

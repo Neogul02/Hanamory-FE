@@ -7,10 +7,11 @@ import { motion } from 'framer-motion'
 import Button from '@/components/Button'
 import ShareModal from '../../components/ShareModal'
 import { useFlowerUploadStore } from '@/store/useFlowerUploadStore'
+import { fetchFlowerInfoFromGemini } from '@/utils/geminiApi'
 
 export default function ResultPage() {
   const router = useRouter()
-  const { file, imageUrl, flowerNames, koreanName, flowerLang, flowerDesc, predictions, flowerInfos, selectedFlowerName, setSelectedFlowerName, setFlowerInfos, resetAnalysis } = useFlowerUploadStore()
+  const { file, imageUrl, annotatedImageUrl, flowerNames, koreanName, flowerLang, flowerDesc, predictions, flowerInfos, selectedFlowerName, setSelectedFlowerName, setFlowerInfos, resetAnalysis } = useFlowerUploadStore()
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [isLoadingFlowerInfo, setIsLoadingFlowerInfo] = useState(false)
 
@@ -28,75 +29,30 @@ export default function ResultPage() {
   const currentFlowerName = isMultipleUniqueFlowers && selectedFlowerName ? selectedFlowerName : flowerNames[0] || ''
   const currentFlowerInfo = flowerInfos[currentFlowerName]
 
-  // 디버깅용 로그
-  console.log('Result Page Debug:', {
-    predictions,
-    uniqueFlowers,
-    isMultipleUniqueFlowers,
-    selectedFlowerName,
-    flowerNames,
-  })
+  // 디버깅용 로그 (프로덕션에서는 제거 권장)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Result Page Debug:', {
+      predictions,
+      uniqueFlowers,
+      isMultipleUniqueFlowers,
+      selectedFlowerName,
+      flowerNames,
+    })
+  }
 
   // 표시할 정보 결정 (다중 꽃일 때는 선택된 꽃 정보, 단일 꽃일 때는 기존 정보)
   const displayKoreanName = isMultipleUniqueFlowers ? currentFlowerInfo?.koreanName : koreanName
   const displayFlowerLang = isMultipleUniqueFlowers ? currentFlowerInfo?.flowerLang : flowerLang
   const displayFlowerDesc = isMultipleUniqueFlowers ? currentFlowerInfo?.flowerDesc : flowerDesc
 
-  // Gemini API로 꽃 정보 가져오기
+  // Gemini API로 꽃 정보 가져오기 (공통 함수 사용)
   const fetchFlowerInfo = useCallback(
     async (flowerName: string) => {
       if (flowerInfos[flowerName]) return // 이미 로드된 경우 스킵
 
       setIsLoadingFlowerInfo(true)
       try {
-        // 개별 꽃에 대한 프롬프트 생성
-        const prompt = `다음 꽃에 대한 정보를 JSON 형식으로 제공해주세요:
-꽃 이름: ${flowerName}
-
-다음 형식으로 응답해주세요:
-{
-  "꽃": {
-    "영어이름": "${flowerName}",
-    "한국어이름": "한국어 꽃 이름",
-    "꽃말": "꽃말을 한국어로",
-    "설명": "꽃에 대한 설명과 꽃 관리방법을 한국어로 4-5 문장"
-  }
-}
-
-응답은 반드시 JSON 형식만 제공하고, 다른 텍스트는 포함하지 마세요.`
-
-        const response = await fetch('/api/gemini', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt }),
-        })
-        const data = await response.json()
-
-        console.log('Gemini API 응답:', data)
-
-        // API 에러 체크
-        if (!response.ok) {
-          throw new Error(data.error || `API 오류: ${response.status}`)
-        }
-
-        let koreanFlowerName = flowerName
-        let lang = '꽃말 정보를 찾을 수 없습니다.'
-        let desc = '설명 정보를 찾을 수 없습니다.'
-
-        try {
-          // 메인 페이지와 동일한 방식으로 JSON 파싱
-          let resultStr = data.result
-          resultStr = resultStr.replace(/```json|```/g, '').trim()
-          const json = JSON.parse(resultStr)
-          const flowerObj = json.꽃 || Object.values(json)[0]
-          koreanFlowerName = flowerObj?.한국어이름 || flowerObj?.이름 || flowerName
-          lang = flowerObj?.꽃말 || '꽃말 정보를 찾을 수 없습니다.'
-          desc = flowerObj?.설명 || '설명 정보를 찾을 수 없습니다.'
-        } catch (parseError) {
-          console.log('JSON 파싱 실패, 전체 텍스트 사용:', parseError)
-          // JSON 파싱 실패 시 전체 응답을 꽃말로 사용
-          lang = data.result || '꽃말 정보를 찾을 수 없습니다.'
-        }
+        const { koreanName: koreanFlowerName, flowerLang: lang, flowerDesc: desc } = await fetchFlowerInfoFromGemini(flowerName)
 
         // store에 꽃 정보 저장
         const newFlowerInfos = {
@@ -137,11 +93,43 @@ export default function ResultPage() {
 
   useEffect(() => {
     // 업로드된 파일이 없거나 분석 결과가 없으면 메인 페이지로 리다이렉트
-    if (!file || (!flowerNames.length && !koreanName)) {
+    if (!file || !flowerNames.length) {
       router.push('/')
       return
     }
-  }, [file, flowerNames, koreanName, router])
+
+    // 페이지 로드 시 단일 꽃에 대한 Gemini 정보 자동 로드
+    if (!isMultipleUniqueFlowers && flowerNames.length > 0 && !koreanName && !isLoadingFlowerInfo) {
+      const firstFlowerName = flowerNames[0]
+      setIsLoadingFlowerInfo(true)
+
+      // Gemini API로 꽃 정보 가져오기 (공통 함수 재사용)
+      const loadInitialFlowerInfo = async () => {
+        try {
+          const { koreanName: koreanFlowerName, flowerLang: lang, flowerDesc: desc } = await fetchFlowerInfoFromGemini(firstFlowerName)
+
+          // store에 단일 꽃 정보 저장 (기존 방식)
+          useFlowerUploadStore.setState({
+            koreanName: koreanFlowerName,
+            flowerLang: lang,
+            flowerDesc: desc,
+          })
+        } catch (error) {
+          console.error('꽃 정보 로드 실패:', error)
+          // 에러 시에도 기본 정보 표시
+          useFlowerUploadStore.setState({
+            koreanName: firstFlowerName,
+            flowerLang: '꽃말 정보를 불러오지 못했습니다.',
+            flowerDesc: '설명 정보를 불러오지 못했습니다.',
+          })
+        } finally {
+          setIsLoadingFlowerInfo(false)
+        }
+      }
+
+      loadInitialFlowerInfo()
+    }
+  }, [file, flowerNames, koreanName, isMultipleUniqueFlowers, router, isLoadingFlowerInfo])
 
   useEffect(() => {
     // 다중 꽃이고 선택된 꽃이 없으면 첫 번째 꽃을 선택
@@ -162,8 +150,20 @@ export default function ResultPage() {
     router.push('/')
   }
 
-  // imageUrl이 있으면 사용하고, 없으면 file로부터 생성
-  const displayImageUrl = imageUrl || (file ? URL.createObjectURL(file) : null)
+  // imageUrl이 있으면 사용하고, 없으면 file로부터 생성 (공유용 원본 이미지)
+  const originalImageUrl = imageUrl || (file ? URL.createObjectURL(file) : null)
+
+  // 결과 페이지에 표시할 이미지: annotatedImageUrl이 있으면 사용 (꽃 인식 표시), 없으면 원본 사용
+  const displayImageUrl = annotatedImageUrl || originalImageUrl
+
+  // 메모리 누수 방지: 컴포넌트 언마운트 시 생성된 Object URL 정리
+  useEffect(() => {
+    return () => {
+      if (!imageUrl && file && originalImageUrl) {
+        URL.revokeObjectURL(originalImageUrl)
+      }
+    }
+  }, [imageUrl, file, originalImageUrl])
 
   if (!displayImageUrl || (!flowerNames.length && !koreanName)) {
     return (
@@ -331,7 +331,7 @@ export default function ResultPage() {
       <ShareModal
         isOpen={isShareModalOpen}
         onClose={() => setIsShareModalOpen(false)}
-        imageUrl={displayImageUrl!}
+        imageUrl={originalImageUrl!}
         imageFile={file}
         koreanName={displayKoreanName || currentFlowerName}
         flowerLang={displayFlowerLang || ''}
