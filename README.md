@@ -145,7 +145,7 @@
 
 | 구분                 | 기술                                                                                                                                                                                                                                                                                                                          |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Core**             | ![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=flat-square&logo=next.js&logoColor=white) ![React](https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) |
+| **Core**             | ![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=flat-square&logo=next.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) |
 | **Style**            | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)                                                                                                                                                                                                         |
 | **Animation**        | ![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white)                                                                                                                                                                                                             |
 | **State Management** | ![Zustand](https://img.shields.io/badge/Zustand-000000?style=flat-square&logoColor=white)                                                                                                                                                                                                                                     |
@@ -153,16 +153,7 @@
 | **AI Integration**   | ![Google Gemini](https://img.shields.io/badge/Google_Gemini-4285F4?style=flat-square&logo=google&logoColor=white) ![YOLO](https://img.shields.io/badge/YOLO-00FFFF?style=flat-square)                                                                                                                                         |
 | **Maps**             | ![Kakao Maps](https://img.shields.io/badge/Kakao_Maps-FFCD00?style=flat-square&logo=kakao&logoColor=black)                                                                                                                                                                                                                    |
 | **Image Processing** | ![Canvas API](https://img.shields.io/badge/Canvas_API-FF6F00?style=flat-square)                                                                                                                                                                                                                                               |
-| **Deployment**       | ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)                                                                                                                                                                                                                           |
-
-### 백엔드 기술 스택
-
-| 구분           | 기술                                                                                                                                                                    |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AI Model**   | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) ![YOLO](https://img.shields.io/badge/YOLO-00FFFF?style=flat-square) |
-| **Deployment** | ![Cloudtype](https://img.shields.io/badge/Cloudtype-000000?style=flat-square)                                                                                           |
-
----
+| **Deployment**       | ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)  ![Cloudtype](https://img.shields.io/badge/Cloudtype-000000?style=flat-square)                                                                                                                                                                                                                         |
 
 ## 📁 프로젝트 구조
 
