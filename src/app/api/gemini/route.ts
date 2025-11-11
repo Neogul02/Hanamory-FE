@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 // 재시도 헬퍼 함수
 async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries: number = 5, initialDelay: number = 2000): Promise<T> {
@@ -56,15 +56,13 @@ export async function POST(req: NextRequest) {
 
     console.log('🤖 Gemini API 요청 시작 (프롬프트 길이:', prompt.length, ')')
 
-    const ai = new GoogleGenAI({ apiKey })
+    const genAI = new GoogleGenerativeAI(apiKey)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
-    // 재시도 로직과 함께 Gemini API 호출 (안정적인 모델 사용)
+    // 재시도 로직과 함께 Gemini API 호출
     const result = await retryWithBackoff(
       async () => {
-        const response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash-exp', 
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        })
+        const response = await model.generateContent(prompt)
         return response
       },
       5, // 최대 5회 재시도
@@ -72,7 +70,7 @@ export async function POST(req: NextRequest) {
     )
 
     // 응답에서 텍스트 추출
-    const text = result?.text || result?.candidates?.[0]?.content?.parts?.[0]?.text || JSON.stringify(result)
+    const text = result?.response?.text() || ''
 
     console.log('✅ Gemini 응답 성공 (길이:', text.length, ')')
     return NextResponse.json({ result: text })

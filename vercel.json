@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "http://43.203.249.114:5000/:path*"
+      "source": "/api/predict-json",
+      "destination": "http://43.203.249.114:5000/predict-json"
+    },
+    {
+      "source": "/api/predict",
+      "destination": "http://43.203.249.114:5000/predict"
     }
   ]
 }
