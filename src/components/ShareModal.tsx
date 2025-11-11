@@ -54,11 +54,7 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
         return
       }
 
-      // 인스타그램 스토리 크기 (9:16 비율)
-      canvas.width = 1080
-      canvas.height = 1920
-
-      console.log('Canvas 초기화 완료:', canvas.width, 'x', canvas.height)
+      console.log('Canvas 초기화 시작')
 
       const renderText = () => {
         // 배경 오버레이 적용
@@ -74,31 +70,37 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
         const centerX = canvas.width / 2
         const centerY = canvas.height / 2
 
+        // 캔버스 크기에 따라 폰트 크기 동적 조정
+        const baseFontSize = Math.min(canvas.width, canvas.height) / 10
+        const titleFontSize = baseFontSize * 1.2
+        const textFontSize = baseFontSize * 0.7
+        const logoFontSize = baseFontSize * 0.6
+
         // 꽃 이름 텍스트
         if (koreanName) {
-          ctx.font = 'bold 100px sans-serif'
+          ctx.font = `bold ${titleFontSize}px sans-serif`
           ctx.textAlign = 'center'
 
           // 텍스트 그림자 (가독성을 위해)
           ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-          ctx.fillText(koreanName, centerX + 3, centerY - 50 + 3)
+          ctx.fillText(koreanName, centerX + 3, centerY - titleFontSize / 2 + 3)
 
           // 메인 텍스트
           ctx.fillStyle = textColor
-          ctx.fillText(koreanName, centerX, centerY - 50)
+          ctx.fillText(koreanName, centerX, centerY - titleFontSize / 2)
         }
 
         // 꽃말 텍스트
         if (flowerLang) {
-          ctx.font = '60px sans-serif'
+          ctx.font = `${textFontSize}px sans-serif`
           ctx.textAlign = 'center'
 
           // 텍스트 길이에 따라 줄바꿈
-          const maxWidth = 900
+          const maxWidth = canvas.width * 0.85
           const words = flowerLang.split(' ')
           let line = ''
-          let y = centerY + 100
-          const lineHeight = 80
+          let y = centerY + titleFontSize
+          const lineHeight = textFontSize * 1.3
 
           for (let n = 0; n < words.length; n++) {
             const testLine = line + words[n] + ' '
@@ -134,16 +136,18 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
         }
 
         // 하단에 로고/워터마크
-        ctx.font = '50px sans-serif'
+        ctx.font = `${logoFontSize}px sans-serif`
         ctx.textAlign = 'center'
+
+        const logoY = canvas.height - logoFontSize * 1.5
 
         // 텍스트 그림자
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-        ctx.fillText('🌸 Hanamory', centerX + 2, canvas.height - 80 + 2)
+        ctx.fillText('🌸 Hanamory', centerX + 2, logoY + 2)
 
         // 메인 텍스트
         ctx.fillStyle = textColor
-        ctx.fillText('🌸 Hanamory', centerX, canvas.height - 80)
+        ctx.fillText('🌸 Hanamory', centerX, logoY)
 
         // 고품질 이미지로 변환 (JPEG 품질 0.95)
         resolve(canvas.toDataURL('image/jpeg', 0.95))
@@ -153,35 +157,15 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
         console.log('Canvas 크기:', canvas.width, 'x', canvas.height)
         console.log('이미지 크기:', img.width, 'x', img.height)
 
-        // 먼저 흰색 배경 그리기 (투명도 문제 방지)
-        ctx.fillStyle = '#ffffff'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        // 캔버스 크기를 이미지 크기에 맞춤 (스케일링 없이 원본 크기 사용)
+        canvas.width = img.width
+        canvas.height = img.height
 
-        // 이미지를 전체 캔버스에 맞춰 그리기
-        const imgAspect = img.width / img.height
-        const canvasAspect = canvas.width / canvas.height
+        console.log('조정된 Canvas 크기:', canvas.width, 'x', canvas.height)
 
-        let drawWidth, drawHeight, offsetX, offsetY
-
-        if (imgAspect > canvasAspect) {
-          // 이미지가 더 넓음 - 높이에 맞춤
-          drawHeight = canvas.height
-          drawWidth = drawHeight * imgAspect
-          offsetX = (canvas.width - drawWidth) / 2
-          offsetY = 0
-        } else {
-          // 이미지가 더 높음 - 너비에 맞춤
-          drawWidth = canvas.width
-          drawHeight = drawWidth / imgAspect
-          offsetX = 0
-          offsetY = (canvas.height - drawHeight) / 2
-        }
-
-        console.log('그리기 영역:', { drawWidth, drawHeight, offsetX, offsetY })
-
-        // 배경 이미지 그리기
-        ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight)
-        console.log('이미지 그리기 완료')
+        // 이미지를 원본 크기 그대로 그리기
+        ctx.drawImage(img, 0, 0, img.width, img.height)
+        console.log('이미지 그리기 완료 (원본 크기)')
 
         // 텍스트 렌더링
         renderText()
@@ -201,18 +185,18 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
         renderText()
       }
 
-      // 이미지 로딩 - File이 있으면 우선 사용, 없으면 fetch로 URL을 Blob으로 변환
+      // 이미지 로딩 - File이 있으면 우선 사용 (원본 이미지)
       if (imageFile) {
-        // 파일이 있는 경우
+        console.log('파일 사용:', imageFile.name, imageFile.type, imageFile.size)
         const reader = new FileReader()
         reader.onload = (e) => {
           const img = document.createElement('img') as HTMLImageElement
           img.onload = () => {
-            console.log('이미지 로딩 성공 (FileReader):', img.width, 'x', img.height)
+            console.log('이미지 로딩 성공 (File):', img.width, 'x', img.height)
             drawImageAndText(img)
           }
           img.onerror = (error) => {
-            console.error('이미지 로딩 실패 (FileReader):', error)
+            console.error('이미지 로딩 실패 (File):', error)
             drawFallback()
           }
           img.src = e.target?.result as string
@@ -222,7 +206,20 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
           drawFallback()
         }
         reader.readAsDataURL(imageFile)
-      } else {
+      } else if (imageUrl && imageUrl.startsWith('blob:')) {
+        // Blob URL인 경우 직접 사용
+        console.log('Blob URL 사용:', imageUrl)
+        const img = document.createElement('img') as HTMLImageElement
+        img.onload = () => {
+          console.log('이미지 로딩 성공 (Blob URL):', img.width, 'x', img.height)
+          drawImageAndText(img)
+        }
+        img.onerror = (error) => {
+          console.error('이미지 로딩 실패 (Blob URL):', error)
+          drawFallback()
+        }
+        img.src = imageUrl
+      } else if (imageUrl) {
         // URL인 경우 fetch를 통해 Blob으로 변환
         try {
           fetch(imageUrl)
@@ -334,13 +331,15 @@ export default function ShareModal({ isOpen, onClose, imageUrl, imageFile, korea
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}>
               <div className='aspect-[9/16] relative rounded-2xl overflow-hidden'>
-                {/* 배경 이미지 */}
-                <Image
-                  src={imageUrl}
-                  alt='꽃 이미지'
-                  fill
-                  className='object-cover'
-                />
+                {/* 배경 이미지 - 원본 이미지 사용 */}
+                {(imageFile || imageUrl) && (
+                  <Image
+                    src={imageFile ? URL.createObjectURL(imageFile) : imageUrl}
+                    alt='꽃 이미지'
+                    fill
+                    className='object-cover'
+                  />
+                )}
 
                 {/* 배경 오버레이 (커스터마이징 적용) */}
                 {backgroundColor !== 'none' && (
